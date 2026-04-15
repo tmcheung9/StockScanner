@@ -1,11 +1,10 @@
-import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from flask import Flask, request, jsonify, render_template_string
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import os
 
-app = FastAPI()
+app = Flask(__name__)
 
 def get_layman_explanation(ticker):
     try:
@@ -61,12 +60,12 @@ def get_layman_explanation(ticker):
     except:
         return {"error": "Analysis failed."}
 
-@app.get("/api/analyze/{ticker}")
-async def api_node(ticker: str):
-    return get_layman_explanation(ticker.upper())
+@app.route("/api/analyze/<ticker>")
+def api_node(ticker):
+    return jsonify(get_layman_explanation(ticker.upper()))
 
-@app.get("/", response_class=HTMLResponse)
-async def home():
+@app.route("/")
+def home():
     return """
     <!DOCTYPE html>
     <html lang="en">
@@ -145,4 +144,5 @@ async def home():
     """
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
